@@ -59,14 +59,31 @@ export function AppShell({ children }: { children: ReactNode }) {
           ))}
         </nav>
 
-        <div className="mt-8 rounded-xl border border-sidebar-border bg-surface-2 p-4">
-          <p className="text-xs uppercase tracking-widest text-muted-foreground">Canal</p>
-          <p className="mt-1 font-display text-sm font-semibold">{channel.name}</p>
-          <p className="text-xs text-muted-foreground">{channel.niche}</p>
-          <p className="mt-3 inline-flex rounded-full bg-accent/15 px-2.5 py-1 text-[11px] font-medium text-accent">
-            {channel.stage}
-          </p>
-        </div>
+        {snapshot ? (
+          <div className="mt-8 rounded-xl border border-sidebar-border bg-surface-2 p-4">
+            <p className="text-xs uppercase tracking-widest text-muted-foreground">Canal conectado</p>
+            <p className="mt-1 truncate font-display text-sm font-semibold">{snapshot.title}</p>
+            <p className="text-xs text-muted-foreground">
+              {snapshot.subscribers.toLocaleString("pt-BR")} inscritos
+            </p>
+            <p className="mt-3 inline-flex rounded-full bg-accent/15 px-2.5 py-1 text-[11px] font-medium text-accent">
+              {stageLabel(snapshot.subscribers)}
+            </p>
+          </div>
+        ) : (
+          <Link
+            to="/conectar"
+            onClick={() => setOpen(false)}
+            className="mt-8 block rounded-xl border border-dashed border-sidebar-border bg-surface-2 p-4 transition-colors hover:border-accent"
+          >
+            <p className="text-xs uppercase tracking-widest text-muted-foreground">Canal</p>
+            <p className="mt-1 font-display text-sm font-semibold">Conectar YouTube</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Importe seus vídeos para recomendações reais.
+            </p>
+          </Link>
+        )}
+
       </aside>
 
       {open && (
