@@ -122,10 +122,7 @@ function Page() {
                 .join("");
               return (
                 <Message from={m.role} key={m.id}>
-                  <MessageContent
-                    variant={m.role === "user" ? "contained" : "flat"}
-                    className="text-sm"
-                  >
+                  <MessageContent className="text-sm">
                     <div className="prose prose-sm max-w-none prose-headings:text-foreground prose-strong:text-foreground prose-li:marker:text-accent text-foreground">
                       <ReactMarkdown>{text}</ReactMarkdown>
                     </div>
@@ -148,8 +145,8 @@ function Page() {
 
         <div className="border-t border-border p-3">
           <PromptInput
-            onSubmit={(e) => {
-              e.preventDefault();
+            onSubmit={(_message, event) => {
+              event.preventDefault();
               send(input);
             }}
           >
