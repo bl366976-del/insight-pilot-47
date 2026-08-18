@@ -10,7 +10,7 @@ import {
   X,
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
-import { channel } from "@/lib/channel-data";
+import { useChannel } from "@/lib/use-channel";
 import { cn } from "@/lib/utils";
 
 const nav = [
@@ -22,8 +22,17 @@ const nav = [
   { to: "/conectar", label: "Conectar canal", icon: Youtube },
 ] as const;
 
+function stageLabel(subs: number) {
+  if (subs < 1000) return "Nível 1 — Iniciante";
+  if (subs < 100000) return "Nível 2 — Crescimento";
+  if (subs < 1000000) return "Nível 3 — Consolidado";
+  return "Nível 4 — Profissional";
+}
+
 export function AppShell({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
+  const { snapshot } = useChannel();
+
 
   return (
     <div className="min-h-screen bg-background lg:flex">
