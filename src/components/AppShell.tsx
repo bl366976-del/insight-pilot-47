@@ -3,7 +3,9 @@ import {
   LayoutDashboard,
   Radar,
   TrendingUp,
-  Sparkles,
+  Clapperboard,
+  MessageSquareText,
+  Youtube,
   Menu,
   X,
 } from "lucide-react";
@@ -15,7 +17,9 @@ const nav = [
   { to: "/", label: "Painel", icon: LayoutDashboard },
   { to: "/oportunidades", label: "Oportunidades", icon: Radar },
   { to: "/tendencias", label: "Tendências", icon: TrendingUp },
-  { to: "/proximo-video", label: "Meu próximo vídeo", icon: Sparkles },
+  { to: "/proximo-video", label: "Meu próximo vídeo", icon: Clapperboard },
+  { to: "/assistente", label: "Assistente IA", icon: MessageSquareText },
+  { to: "/conectar", label: "Conectar canal", icon: Youtube },
 ] as const;
 
 export function AppShell({ children }: { children: ReactNode }) {
