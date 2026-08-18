@@ -10,13 +10,26 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AssistenteRouteImport } from './routes/assistente'
+import { Route as ConectarRouteImport } from './routes/conectar'
 import { Route as OportunidadesRouteImport } from './routes/oportunidades'
 import { Route as ProximoVideoRouteImport } from './routes/proximo-video'
 import { Route as TendenciasRouteImport } from './routes/tendencias'
+import { Route as ApiChatRouteImport } from './routes/api/chat'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AssistenteRoute = AssistenteRouteImport.update({
+  id: '/assistente',
+  path: '/assistente',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConectarRoute = ConectarRouteImport.update({
+  id: '/conectar',
+  path: '/conectar',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OportunidadesRoute = OportunidadesRouteImport.update({
@@ -34,39 +47,78 @@ const TendenciasRoute = TendenciasRouteImport.update({
   path: '/tendencias',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiChatRoute = ApiChatRouteImport.update({
+  id: '/api/chat',
+  path: '/api/chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/assistente': typeof AssistenteRoute
+  '/conectar': typeof ConectarRoute
   '/oportunidades': typeof OportunidadesRoute
   '/proximo-video': typeof ProximoVideoRoute
   '/tendencias': typeof TendenciasRoute
+  '/api/chat': typeof ApiChatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/assistente': typeof AssistenteRoute
+  '/conectar': typeof ConectarRoute
   '/oportunidades': typeof OportunidadesRoute
   '/proximo-video': typeof ProximoVideoRoute
   '/tendencias': typeof TendenciasRoute
+  '/api/chat': typeof ApiChatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/assistente': typeof AssistenteRoute
+  '/conectar': typeof ConectarRoute
   '/oportunidades': typeof OportunidadesRoute
   '/proximo-video': typeof ProximoVideoRoute
   '/tendencias': typeof TendenciasRoute
+  '/api/chat': typeof ApiChatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/oportunidades' | '/proximo-video' | '/tendencias'
+  fullPaths:
+    | '/'
+    | '/assistente'
+    | '/conectar'
+    | '/oportunidades'
+    | '/proximo-video'
+    | '/tendencias'
+    | '/api/chat'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/oportunidades' | '/proximo-video' | '/tendencias'
-  id: '__root__' | '/' | '/oportunidades' | '/proximo-video' | '/tendencias'
+  to:
+    | '/'
+    | '/assistente'
+    | '/conectar'
+    | '/oportunidades'
+    | '/proximo-video'
+    | '/tendencias'
+    | '/api/chat'
+  id:
+    | '__root__'
+    | '/'
+    | '/assistente'
+    | '/conectar'
+    | '/oportunidades'
+    | '/proximo-video'
+    | '/tendencias'
+    | '/api/chat'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AssistenteRoute: typeof AssistenteRoute
+  ConectarRoute: typeof ConectarRoute
   OportunidadesRoute: typeof OportunidadesRoute
   ProximoVideoRoute: typeof ProximoVideoRoute
   TendenciasRoute: typeof TendenciasRoute
+  ApiChatRoute: typeof ApiChatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -76,6 +128,20 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/assistente': {
+      id: '/assistente'
+      path: '/assistente'
+      fullPath: '/assistente'
+      preLoaderRoute: typeof AssistenteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/conectar': {
+      id: '/conectar'
+      path: '/conectar'
+      fullPath: '/conectar'
+      preLoaderRoute: typeof ConectarRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/oportunidades': {
@@ -99,14 +165,24 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TendenciasRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/chat': {
+      id: '/api/chat'
+      path: '/api/chat'
+      fullPath: '/api/chat'
+      preLoaderRoute: typeof ApiChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AssistenteRoute: AssistenteRoute,
+  ConectarRoute: ConectarRoute,
   OportunidadesRoute: OportunidadesRoute,
   ProximoVideoRoute: ProximoVideoRoute,
   TendenciasRoute: TendenciasRoute,
+  ApiChatRoute: ApiChatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

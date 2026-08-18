@@ -4,7 +4,9 @@ import {
   ArrowDownRight,
   Bell,
   CheckCircle2,
-  Sparkles,
+  Clapperboard,
+  MessageSquareText,
+  Youtube,
 } from "lucide-react";
 import {
   Area,
@@ -90,10 +92,22 @@ function Dashboard() {
         </p>
         <div className="mt-5 flex flex-wrap items-center gap-3">
           <Link
+            to="/conectar"
+            className="inline-flex items-center gap-2 rounded-lg border border-border bg-surface-2 px-4 py-2.5 text-sm font-medium transition-colors hover:border-accent hover:text-accent"
+          >
+            <Youtube className="size-4" /> Conectar meu canal
+          </Link>
+          <Link
+            to="/assistente"
+            className="inline-flex items-center gap-2 rounded-lg border border-border bg-surface-2 px-4 py-2.5 text-sm font-medium transition-colors hover:border-accent hover:text-accent"
+          >
+            <MessageSquareText className="size-4" /> Falar com a IA
+          </Link>
+          <Link
             to="/proximo-video"
             className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
           >
-            <Sparkles className="size-4" /> Ver meu próximo vídeo
+            <Clapperboard className="size-4" /> Ver meu próximo vídeo
           </Link>
           <WhyChip
             confidence="alta"
