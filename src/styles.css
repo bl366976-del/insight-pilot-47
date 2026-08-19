@@ -5,9 +5,10 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Design system — "Studio Intelligence"
- * Dark analytics cockpit: deep ink surfaces, signal-red primary,
- * electric-lime accent for opportunities. All colors in oklch.
+ * Design system — "Aurora"
+ * Central de inteligência do criador. Fundo quase-preto azulado,
+ * primário violeta (criatividade/tecnologia), paleta semântica dedicada
+ * para sucesso, alerta, perigo, informação, tendência e oportunidade.
  */
 
 @theme inline {
@@ -37,6 +38,12 @@
   --color-success-foreground: var(--success-foreground);
   --color-warning: var(--warning);
   --color-warning-foreground: var(--warning-foreground);
+  --color-danger: var(--danger);
+  --color-danger-foreground: var(--danger-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-trend: var(--trend);
+  --color-opportunity: var(--opportunity);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -56,51 +63,62 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
-  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Sora", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --shadow-glow: 0 0 0 1px oklch(1 0 0 / 6%), 0 24px 60px -30px oklch(0 0 0 / 90%);
 }
 
 :root {
-  --radius: 0.875rem;
-  --background: oklch(0.16 0.015 264);
-  --foreground: oklch(0.97 0.005 250);
-  --surface: oklch(0.2 0.017 264);
-  --surface-2: oklch(0.24 0.019 264);
-  --card: oklch(0.2 0.017 264);
-  --card-foreground: oklch(0.97 0.005 250);
-  --popover: oklch(0.21 0.018 264);
-  --popover-foreground: oklch(0.97 0.005 250);
-  --primary: oklch(0.62 0.221 22);
-  --primary-foreground: oklch(0.99 0.005 250);
-  --secondary: oklch(0.27 0.02 264);
-  --secondary-foreground: oklch(0.95 0.005 250);
-  --muted: oklch(0.26 0.018 264);
-  --muted-foreground: oklch(0.7 0.02 258);
-  --accent: oklch(0.86 0.2 128);
-  --accent-foreground: oklch(0.2 0.05 130);
-  --destructive: oklch(0.62 0.22 25);
-  --destructive-foreground: oklch(0.99 0.005 250);
-  --success: oklch(0.75 0.16 155);
-  --success-foreground: oklch(0.18 0.03 155);
-  --warning: oklch(0.82 0.16 78);
-  --warning-foreground: oklch(0.22 0.04 78);
+  --radius: 1rem;
+  --background: oklch(0.145 0.014 285);
+  --foreground: oklch(0.975 0.004 285);
+  --surface: oklch(0.185 0.016 285);
+  --surface-2: oklch(0.225 0.019 285);
+  --card: oklch(0.185 0.016 285);
+  --card-foreground: oklch(0.975 0.004 285);
+  --popover: oklch(0.205 0.018 285);
+  --popover-foreground: oklch(0.975 0.004 285);
+  /* Violeta: criatividade + tecnologia */
+  --primary: oklch(0.56 0.243 292);
+  --primary-foreground: oklch(0.99 0.004 285);
+  --secondary: oklch(0.255 0.02 285);
+  --secondary-foreground: oklch(0.96 0.004 285);
+  --muted: oklch(0.245 0.017 285);
+  --muted-foreground: oklch(0.715 0.018 285);
+  /* Rosa-coral: descoberta e destaque */
+  --accent: oklch(0.68 0.213 13);
+  --accent-foreground: oklch(0.99 0.004 285);
+  --destructive: oklch(0.62 0.235 24);
+  --destructive-foreground: oklch(0.99 0.004 285);
+
+  /* Paleta semântica de estados */
+  --success: oklch(0.75 0.17 152);
+  --success-foreground: oklch(0.17 0.04 152);
+  --warning: oklch(0.79 0.16 68);
+  --warning-foreground: oklch(0.2 0.04 68);
+  --danger: oklch(0.63 0.235 24);
+  --danger-foreground: oklch(0.99 0.004 285);
+  --info: oklch(0.7 0.14 234);
+  --info-foreground: oklch(0.17 0.04 234);
+  --trend: oklch(0.72 0.19 330);
+  --opportunity: oklch(0.78 0.15 190);
+
   --border: oklch(1 0 0 / 9%);
   --input: oklch(1 0 0 / 12%);
-  --ring: oklch(0.86 0.2 128);
-  --chart-1: oklch(0.86 0.2 128);
-  --chart-2: oklch(0.62 0.221 22);
-  --chart-3: oklch(0.75 0.13 220);
-  --chart-4: oklch(0.82 0.16 78);
-  --chart-5: oklch(0.7 0.15 300);
-  --sidebar: oklch(0.18 0.016 264);
-  --sidebar-foreground: oklch(0.93 0.005 250);
-  --sidebar-primary: oklch(0.86 0.2 128);
-  --sidebar-primary-foreground: oklch(0.2 0.05 130);
-  --sidebar-accent: oklch(0.24 0.019 264);
-  --sidebar-accent-foreground: oklch(0.97 0.005 250);
-  --sidebar-border: oklch(1 0 0 / 8%);
-  --sidebar-ring: oklch(0.86 0.2 128);
+  --ring: oklch(0.62 0.22 292);
+  --chart-1: oklch(0.62 0.22 292);
+  --chart-2: oklch(0.72 0.19 330);
+  --chart-3: oklch(0.7 0.14 234);
+  --chart-4: oklch(0.79 0.16 68);
+  --chart-5: oklch(0.75 0.17 152);
+  --sidebar: oklch(0.165 0.015 285);
+  --sidebar-foreground: oklch(0.93 0.005 285);
+  --sidebar-primary: oklch(0.62 0.22 292);
+  --sidebar-primary-foreground: oklch(0.99 0.004 285);
+  --sidebar-accent: oklch(0.235 0.022 288);
+  --sidebar-accent-foreground: oklch(0.98 0.004 285);
+  --sidebar-border: oklch(1 0 0 / 7%);
+  --sidebar-ring: oklch(0.62 0.22 292);
 }
 
 .dark {
@@ -124,25 +142,56 @@
   h3,
   h4 {
     font-family: var(--font-display);
-    letter-spacing: -0.02em;
+    letter-spacing: -0.025em;
   }
 }
 
 @utility panel {
   background:
-    linear-gradient(180deg, oklch(1 0 0 / 5%), transparent 55%),
+    linear-gradient(180deg, oklch(1 0 0 / 4%), transparent 55%),
     var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
-  box-shadow: 0 1px 0 0 oklch(1 0 0 / 5%) inset, 0 20px 45px -35px oklch(0 0 0 / 90%);
+  box-shadow:
+    0 1px 0 0 oklch(1 0 0 / 5%) inset,
+    0 24px 50px -40px oklch(0 0 0 / 95%);
+}
+
+@utility panel-hover {
+  transition:
+    border-color 160ms ease,
+    transform 160ms ease;
+  &:hover {
+    border-color: color-mix(in oklab, var(--color-primary) 45%, transparent);
+    transform: translateY(-2px);
+  }
 }
 
 @utility grid-noise {
   position: relative;
   overflow: hidden;
   background-image:
-    radial-gradient(circle at 20% -10%, oklch(0.62 0.221 22 / 18%), transparent 55%),
-    radial-gradient(circle at 90% 0%, oklch(0.86 0.2 128 / 12%), transparent 45%);
+    radial-gradient(circle at 12% -20%, oklch(0.56 0.243 292 / 28%), transparent 55%),
+    radial-gradient(circle at 88% 0%, oklch(0.68 0.213 13 / 16%), transparent 48%);
+}
+
+@utility brand-gradient {
+  background-image: linear-gradient(
+    120deg,
+    oklch(0.62 0.22 292),
+    oklch(0.68 0.213 13) 55%,
+    oklch(0.79 0.16 68)
+  );
+}
+
+@utility brand-text {
+  background-image: linear-gradient(
+    120deg,
+    oklch(0.72 0.19 300),
+    oklch(0.74 0.2 13) 70%
+  );
+  background-clip: text;
+  color: transparent;
 }
 
 @utility num {
