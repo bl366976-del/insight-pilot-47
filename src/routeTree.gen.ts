@@ -15,6 +15,7 @@ import { Route as ConectarRouteImport } from './routes/conectar'
 import { Route as CreatorDnaRouteImport } from './routes/creator-dna'
 import { Route as OportunidadesRouteImport } from './routes/oportunidades'
 import { Route as ProximoVideoRouteImport } from './routes/proximo-video'
+import { Route as SegurancaRouteImport } from './routes/seguranca'
 import { Route as TendenciasRouteImport } from './routes/tendencias'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 
@@ -48,6 +49,11 @@ const ProximoVideoRoute = ProximoVideoRouteImport.update({
   path: '/proximo-video',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SegurancaRoute = SegurancaRouteImport.update({
+  id: '/seguranca',
+  path: '/seguranca',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TendenciasRoute = TendenciasRouteImport.update({
   id: '/tendencias',
   path: '/tendencias',
@@ -66,6 +72,7 @@ export interface FileRoutesByFullPath {
   '/creator-dna': typeof CreatorDnaRoute
   '/oportunidades': typeof OportunidadesRoute
   '/proximo-video': typeof ProximoVideoRoute
+  '/seguranca': typeof SegurancaRoute
   '/tendencias': typeof TendenciasRoute
   '/api/chat': typeof ApiChatRoute
 }
@@ -76,6 +83,7 @@ export interface FileRoutesByTo {
   '/creator-dna': typeof CreatorDnaRoute
   '/oportunidades': typeof OportunidadesRoute
   '/proximo-video': typeof ProximoVideoRoute
+  '/seguranca': typeof SegurancaRoute
   '/tendencias': typeof TendenciasRoute
   '/api/chat': typeof ApiChatRoute
 }
@@ -87,6 +95,7 @@ export interface FileRoutesById {
   '/creator-dna': typeof CreatorDnaRoute
   '/oportunidades': typeof OportunidadesRoute
   '/proximo-video': typeof ProximoVideoRoute
+  '/seguranca': typeof SegurancaRoute
   '/tendencias': typeof TendenciasRoute
   '/api/chat': typeof ApiChatRoute
 }
@@ -99,6 +108,7 @@ export interface FileRouteTypes {
     | '/creator-dna'
     | '/oportunidades'
     | '/proximo-video'
+    | '/seguranca'
     | '/tendencias'
     | '/api/chat'
   fileRoutesByTo: FileRoutesByTo
@@ -109,6 +119,7 @@ export interface FileRouteTypes {
     | '/creator-dna'
     | '/oportunidades'
     | '/proximo-video'
+    | '/seguranca'
     | '/tendencias'
     | '/api/chat'
   id:
@@ -119,6 +130,7 @@ export interface FileRouteTypes {
     | '/creator-dna'
     | '/oportunidades'
     | '/proximo-video'
+    | '/seguranca'
     | '/tendencias'
     | '/api/chat'
   fileRoutesById: FileRoutesById
@@ -130,6 +142,7 @@ export interface RootRouteChildren {
   CreatorDnaRoute: typeof CreatorDnaRoute
   OportunidadesRoute: typeof OportunidadesRoute
   ProximoVideoRoute: typeof ProximoVideoRoute
+  SegurancaRoute: typeof SegurancaRoute
   TendenciasRoute: typeof TendenciasRoute
   ApiChatRoute: typeof ApiChatRoute
 }
@@ -178,6 +191,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProximoVideoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/seguranca': {
+      id: '/seguranca'
+      path: '/seguranca'
+      fullPath: '/seguranca'
+      preLoaderRoute: typeof SegurancaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/tendencias': {
       id: '/tendencias'
       path: '/tendencias'
@@ -202,6 +222,7 @@ const rootRouteChildren: RootRouteChildren = {
   CreatorDnaRoute: CreatorDnaRoute,
   OportunidadesRoute: OportunidadesRoute,
   ProximoVideoRoute: ProximoVideoRoute,
+  SegurancaRoute: SegurancaRoute,
   TendenciasRoute: TendenciasRoute,
   ApiChatRoute: ApiChatRoute,
 }
