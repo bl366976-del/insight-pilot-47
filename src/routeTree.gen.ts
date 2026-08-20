@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AssistenteRouteImport } from './routes/assistente'
 import { Route as ConectarRouteImport } from './routes/conectar'
+import { Route as CreatorDnaRouteImport } from './routes/creator-dna'
 import { Route as OportunidadesRouteImport } from './routes/oportunidades'
 import { Route as ProximoVideoRouteImport } from './routes/proximo-video'
 import { Route as TendenciasRouteImport } from './routes/tendencias'
@@ -30,6 +31,11 @@ const AssistenteRoute = AssistenteRouteImport.update({
 const ConectarRoute = ConectarRouteImport.update({
   id: '/conectar',
   path: '/conectar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CreatorDnaRoute = CreatorDnaRouteImport.update({
+  id: '/creator-dna',
+  path: '/creator-dna',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OportunidadesRoute = OportunidadesRouteImport.update({
@@ -57,6 +63,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/assistente': typeof AssistenteRoute
   '/conectar': typeof ConectarRoute
+  '/creator-dna': typeof CreatorDnaRoute
   '/oportunidades': typeof OportunidadesRoute
   '/proximo-video': typeof ProximoVideoRoute
   '/tendencias': typeof TendenciasRoute
@@ -66,6 +73,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/assistente': typeof AssistenteRoute
   '/conectar': typeof ConectarRoute
+  '/creator-dna': typeof CreatorDnaRoute
   '/oportunidades': typeof OportunidadesRoute
   '/proximo-video': typeof ProximoVideoRoute
   '/tendencias': typeof TendenciasRoute
@@ -76,6 +84,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/assistente': typeof AssistenteRoute
   '/conectar': typeof ConectarRoute
+  '/creator-dna': typeof CreatorDnaRoute
   '/oportunidades': typeof OportunidadesRoute
   '/proximo-video': typeof ProximoVideoRoute
   '/tendencias': typeof TendenciasRoute
@@ -87,6 +96,7 @@ export interface FileRouteTypes {
     | '/'
     | '/assistente'
     | '/conectar'
+    | '/creator-dna'
     | '/oportunidades'
     | '/proximo-video'
     | '/tendencias'
@@ -96,6 +106,7 @@ export interface FileRouteTypes {
     | '/'
     | '/assistente'
     | '/conectar'
+    | '/creator-dna'
     | '/oportunidades'
     | '/proximo-video'
     | '/tendencias'
@@ -105,6 +116,7 @@ export interface FileRouteTypes {
     | '/'
     | '/assistente'
     | '/conectar'
+    | '/creator-dna'
     | '/oportunidades'
     | '/proximo-video'
     | '/tendencias'
@@ -115,6 +127,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AssistenteRoute: typeof AssistenteRoute
   ConectarRoute: typeof ConectarRoute
+  CreatorDnaRoute: typeof CreatorDnaRoute
   OportunidadesRoute: typeof OportunidadesRoute
   ProximoVideoRoute: typeof ProximoVideoRoute
   TendenciasRoute: typeof TendenciasRoute
@@ -142,6 +155,13 @@ declare module '@tanstack/react-router' {
       path: '/conectar'
       fullPath: '/conectar'
       preLoaderRoute: typeof ConectarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/creator-dna': {
+      id: '/creator-dna'
+      path: '/creator-dna'
+      fullPath: '/creator-dna'
+      preLoaderRoute: typeof CreatorDnaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/oportunidades': {
@@ -179,6 +199,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AssistenteRoute: AssistenteRoute,
   ConectarRoute: ConectarRoute,
+  CreatorDnaRoute: CreatorDnaRoute,
   OportunidadesRoute: OportunidadesRoute,
   ProximoVideoRoute: ProximoVideoRoute,
   TendenciasRoute: TendenciasRoute,
