@@ -47,7 +47,11 @@ const SUGGESTIONS = [
 
 function Page() {
   const { snapshot } = useChannel();
-  const channelContext = useMemo(() => buildChannelContext(snapshot), [snapshot]);
+  const { dna } = useCreatorDna();
+  const channelContext = useMemo(
+    () => [buildChannelContext(snapshot), buildDnaContext(dna)].filter(Boolean).join("\n\n"),
+    [snapshot, dna],
+  );
   const [input, setInput] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
