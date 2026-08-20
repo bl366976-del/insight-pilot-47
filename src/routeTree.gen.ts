@@ -10,16 +10,25 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as AssistenteRouteImport } from './routes/assistente'
 import { Route as ConectarRouteImport } from './routes/conectar'
+import { Route as CreatorDnaRouteImport } from './routes/creator-dna'
+import { Route as LaboratorioRouteImport } from './routes/laboratorio'
 import { Route as OportunidadesRouteImport } from './routes/oportunidades'
 import { Route as ProximoVideoRouteImport } from './routes/proximo-video'
+import { Route as SegurancaRouteImport } from './routes/seguranca'
 import { Route as TendenciasRouteImport } from './routes/tendencias'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AnalyticsRoute = AnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AssistenteRoute = AssistenteRouteImport.update({
@@ -32,6 +41,16 @@ const ConectarRoute = ConectarRouteImport.update({
   path: '/conectar',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CreatorDnaRoute = CreatorDnaRouteImport.update({
+  id: '/creator-dna',
+  path: '/creator-dna',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LaboratorioRoute = LaboratorioRouteImport.update({
+  id: '/laboratorio',
+  path: '/laboratorio',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OportunidadesRoute = OportunidadesRouteImport.update({
   id: '/oportunidades',
   path: '/oportunidades',
@@ -40,6 +59,11 @@ const OportunidadesRoute = OportunidadesRouteImport.update({
 const ProximoVideoRoute = ProximoVideoRouteImport.update({
   id: '/proximo-video',
   path: '/proximo-video',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SegurancaRoute = SegurancaRouteImport.update({
+  id: '/seguranca',
+  path: '/seguranca',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TendenciasRoute = TendenciasRouteImport.update({
@@ -55,29 +79,41 @@ const ApiChatRoute = ApiChatRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/analytics': typeof AnalyticsRoute
   '/assistente': typeof AssistenteRoute
   '/conectar': typeof ConectarRoute
+  '/creator-dna': typeof CreatorDnaRoute
+  '/laboratorio': typeof LaboratorioRoute
   '/oportunidades': typeof OportunidadesRoute
   '/proximo-video': typeof ProximoVideoRoute
+  '/seguranca': typeof SegurancaRoute
   '/tendencias': typeof TendenciasRoute
   '/api/chat': typeof ApiChatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/analytics': typeof AnalyticsRoute
   '/assistente': typeof AssistenteRoute
   '/conectar': typeof ConectarRoute
+  '/creator-dna': typeof CreatorDnaRoute
+  '/laboratorio': typeof LaboratorioRoute
   '/oportunidades': typeof OportunidadesRoute
   '/proximo-video': typeof ProximoVideoRoute
+  '/seguranca': typeof SegurancaRoute
   '/tendencias': typeof TendenciasRoute
   '/api/chat': typeof ApiChatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/analytics': typeof AnalyticsRoute
   '/assistente': typeof AssistenteRoute
   '/conectar': typeof ConectarRoute
+  '/creator-dna': typeof CreatorDnaRoute
+  '/laboratorio': typeof LaboratorioRoute
   '/oportunidades': typeof OportunidadesRoute
   '/proximo-video': typeof ProximoVideoRoute
+  '/seguranca': typeof SegurancaRoute
   '/tendencias': typeof TendenciasRoute
   '/api/chat': typeof ApiChatRoute
 }
@@ -85,38 +121,54 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/analytics'
     | '/assistente'
     | '/conectar'
+    | '/creator-dna'
+    | '/laboratorio'
     | '/oportunidades'
     | '/proximo-video'
+    | '/seguranca'
     | '/tendencias'
     | '/api/chat'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/analytics'
     | '/assistente'
     | '/conectar'
+    | '/creator-dna'
+    | '/laboratorio'
     | '/oportunidades'
     | '/proximo-video'
+    | '/seguranca'
     | '/tendencias'
     | '/api/chat'
   id:
     | '__root__'
     | '/'
+    | '/analytics'
     | '/assistente'
     | '/conectar'
+    | '/creator-dna'
+    | '/laboratorio'
     | '/oportunidades'
     | '/proximo-video'
+    | '/seguranca'
     | '/tendencias'
     | '/api/chat'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AnalyticsRoute: typeof AnalyticsRoute
   AssistenteRoute: typeof AssistenteRoute
   ConectarRoute: typeof ConectarRoute
+  CreatorDnaRoute: typeof CreatorDnaRoute
+  LaboratorioRoute: typeof LaboratorioRoute
   OportunidadesRoute: typeof OportunidadesRoute
   ProximoVideoRoute: typeof ProximoVideoRoute
+  SegurancaRoute: typeof SegurancaRoute
   TendenciasRoute: typeof TendenciasRoute
   ApiChatRoute: typeof ApiChatRoute
 }
@@ -128,6 +180,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/analytics': {
+      id: '/analytics'
+      path: '/analytics'
+      fullPath: '/analytics'
+      preLoaderRoute: typeof AnalyticsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/assistente': {
@@ -144,6 +203,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConectarRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/creator-dna': {
+      id: '/creator-dna'
+      path: '/creator-dna'
+      fullPath: '/creator-dna'
+      preLoaderRoute: typeof CreatorDnaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/laboratorio': {
+      id: '/laboratorio'
+      path: '/laboratorio'
+      fullPath: '/laboratorio'
+      preLoaderRoute: typeof LaboratorioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/oportunidades': {
       id: '/oportunidades'
       path: '/oportunidades'
@@ -156,6 +229,13 @@ declare module '@tanstack/react-router' {
       path: '/proximo-video'
       fullPath: '/proximo-video'
       preLoaderRoute: typeof ProximoVideoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/seguranca': {
+      id: '/seguranca'
+      path: '/seguranca'
+      fullPath: '/seguranca'
+      preLoaderRoute: typeof SegurancaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/tendencias': {
@@ -177,10 +257,14 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AnalyticsRoute: AnalyticsRoute,
   AssistenteRoute: AssistenteRoute,
   ConectarRoute: ConectarRoute,
+  CreatorDnaRoute: CreatorDnaRoute,
+  LaboratorioRoute: LaboratorioRoute,
   OportunidadesRoute: OportunidadesRoute,
   ProximoVideoRoute: ProximoVideoRoute,
+  SegurancaRoute: SegurancaRoute,
   TendenciasRoute: TendenciasRoute,
   ApiChatRoute: ApiChatRoute,
 }

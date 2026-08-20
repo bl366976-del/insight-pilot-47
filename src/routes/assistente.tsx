@@ -18,6 +18,7 @@ import {
 } from "@/components/ai-elements/prompt-input";
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { buildChannelContext, useChannel } from "@/lib/use-channel";
+import { buildDnaContext, useCreatorDna } from "@/lib/creator-dna";
 
 export const Route = createFileRoute("/assistente")({
   head: () => ({
@@ -47,7 +48,11 @@ const SUGGESTIONS = [
 
 function Page() {
   const { snapshot } = useChannel();
-  const channelContext = useMemo(() => buildChannelContext(snapshot), [snapshot]);
+  const { dna } = useCreatorDna();
+  const channelContext = useMemo(
+    () => [buildChannelContext(snapshot), buildDnaContext(dna)].filter(Boolean).join("\n\n"),
+    [snapshot, dna],
+  );
   const [input, setInput] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
