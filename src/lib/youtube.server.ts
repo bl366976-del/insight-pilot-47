@@ -1,4 +1,6 @@
-const API = "https://www.googleapis.com/youtube/v3";
+const UA =
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36";
+const INNERTUBE_KEY = "AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8";
 
 export type ChannelSnapshot = {
   channelId: string;
@@ -37,11 +39,28 @@ export type VideoSnapshot = {
   vsAverage: number;
 };
 
-function parseDuration(iso: string): number {
-  const m = /PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/.exec(iso);
+async function getText(url: string) {
+  const res = await fetch(url, {
+    headers: { "user-agent": UA, "accept-language": "en-US,en;q=0.9" },
+  });
+  if (!res.ok) throw new Error(`Falha ao consultar o YouTube (${res.status}).`);
+  return await res.text();
+}
+
+function unescapeJson(value: string) {
+  try {
+    return JSON.parse(`"${value.replace(/"/g, '\\"')}"`) as string;
+  } catch {
+    return value;
+  }
+}
+
+function parseCompact(raw: string): number {
+  const m = /([\d.,]+)\s*([KMB])?/i.exec(raw.replace(/\u00a0/g, " "));
   if (!m) return 0;
-  const [, h, min, s] = m;
-  return (Number(h ?? 0) * 3600 + Number(min ?? 0) * 60 + Number(s ?? 0)) / 60;
+  const num = Number(m[1]!.replace(/,/g, ""));
+  const mult = { k: 1e3, m: 1e6, b: 1e9 }[(m[2] ?? "").toLowerCase()] ?? 1;
+  return Math.round(num * mult);
 }
 
 function extractQuery(input: string): { type: "id" | "handle" | "search"; value: string } {
@@ -55,72 +74,129 @@ function extractQuery(input: string): { type: "id" | "handle" | "search"; value:
   return { type: "search", value: raw };
 }
 
-async function fetchJson(url: string) {
-  const res = await fetch(url);
-  const body = await res.json();
-  if (!res.ok) {
-    const message =
-      (body as { error?: { message?: string } })?.error?.message ?? `Erro ${res.status}`;
-    throw new Error(message);
+async function resolveChannelId(input: string): Promise<string> {
+  const q = extractQuery(input);
+  if (q.type === "id") return q.value;
+
+  if (q.type === "handle") {
+    const html = await getText(`https://www.youtube.com/@${encodeURIComponent(q.value)}`);
+    const id =
+      /"externalId":"(UC[\w-]{20,})"/.exec(html)?.[1] ??
+      /rel="canonical" href="https:\/\/www\.youtube\.com\/channel\/(UC[\w-]{20,})"/.exec(html)?.[1];
+    if (id) return id;
   }
-  return body as any;
+
+  const html = await getText(
+    `https://www.youtube.com/results?search_query=${encodeURIComponent(q.value)}&sp=EgIQAg%253D%253D`,
+  );
+  const id = /"channelId":"(UC[\w-]{20,})"/.exec(html)?.[1];
+  if (!id) throw new Error("Canal não encontrado. Tente o @handle ou a URL completa do canal.");
+  return id;
 }
 
-export async function fetchChannelSnapshot(input: string, key: string): Promise<ChannelSnapshot> {
-  const q = extractQuery(input);
-  let channelId = q.type === "id" ? q.value : "";
+type RssEntry = {
+  id: string;
+  title: string;
+  publishedAt: string;
+  views: number;
+  likes: number;
+  thumbnail: string;
+  isShort: boolean;
+};
 
-  if (!channelId && q.type === "handle") {
-    const data = await fetchJson(
-      `${API}/channels?part=id&forHandle=${encodeURIComponent(q.value)}&key=${key}`,
-    );
-    channelId = data.items?.[0]?.id ?? "";
-  }
-  if (!channelId) {
-    const data = await fetchJson(
-      `${API}/search?part=snippet&type=channel&maxResults=1&q=${encodeURIComponent(q.value)}&key=${key}`,
-    );
-    channelId = data.items?.[0]?.snippet?.channelId ?? data.items?.[0]?.id?.channelId ?? "";
-  }
-  if (!channelId) throw new Error("Canal não encontrado. Tente o @handle ou a URL completa.");
-
-  const channelData = await fetchJson(
-    `${API}/channels?part=snippet,statistics,contentDetails&id=${channelId}&key=${key}`,
+async function fetchFeed(channelId: string): Promise<RssEntry[]> {
+  const xml = await getText(
+    `https://www.youtube.com/feeds/videos.xml?channel_id=${encodeURIComponent(channelId)}`,
   );
-  const ch = channelData.items?.[0];
-  if (!ch) throw new Error("Canal não encontrado.");
+  const entries = xml.split("<entry>").slice(1);
+  return entries.map((e) => {
+    const pick = (re: RegExp) => re.exec(e)?.[1] ?? "";
+    const id = pick(/<yt:videoId>([^<]+)<\/yt:videoId>/);
+    return {
+      id,
+      title: unescapeJson(pick(/<title>([\s\S]*?)<\/title>/))
+        .replace(/&amp;/g, "&")
+        .replace(/&#39;/g, "'")
+        .replace(/&quot;/g, '"')
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">"),
+      publishedAt: pick(/<published>([^<]+)<\/published>/),
+      views: Number(pick(/<media:statistics views="(\d+)"/) || 0),
+      likes: Number(pick(/<media:starRating count="(\d+)"/) || 0),
+      thumbnail: pick(/<media:thumbnail url="([^"]+)"/),
+      isShort: /href="https:\/\/www\.youtube\.com\/shorts\//.test(e),
+    };
+  });
+}
 
-  const uploads: string = ch.contentDetails.relatedPlaylists.uploads;
-  const playlist = await fetchJson(
-    `${API}/playlistItems?part=contentDetails&maxResults=30&playlistId=${uploads}&key=${key}`,
-  );
-  const ids: string[] = (playlist.items ?? []).map((i: any) => i.contentDetails.videoId);
-
-  let videos: VideoSnapshot[] = [];
-  if (ids.length) {
-    const vd = await fetchJson(
-      `${API}/videos?part=snippet,statistics,contentDetails&id=${ids.join(",")}&key=${key}`,
-    );
-    videos = (vd.items ?? []).map((v: any) => {
-      const views = Number(v.statistics?.viewCount ?? 0);
-      const likes = Number(v.statistics?.likeCount ?? 0);
-      const comments = Number(v.statistics?.commentCount ?? 0);
-      const durationMin = parseDuration(v.contentDetails?.duration ?? "PT0S");
-      return {
-        id: v.id,
-        title: v.snippet.title,
-        publishedAt: v.snippet.publishedAt,
-        views,
-        likes,
-        comments,
-        durationMin,
-        isShort: durationMin <= 1.05,
-        thumbnail: v.snippet.thumbnails?.medium?.url ?? "",
-        engagementRate: views ? ((likes + comments) / views) * 100 : 0,
-        vsAverage: 0,
-      } satisfies VideoSnapshot;
+async function fetchDuration(videoId: string): Promise<number> {
+  try {
+    const res = await fetch(`https://www.youtube.com/youtubei/v1/player?key=${INNERTUBE_KEY}`, {
+      method: "POST",
+      headers: { "content-type": "application/json", "user-agent": UA },
+      body: JSON.stringify({
+        videoId,
+        context: { client: { clientName: "WEB", clientVersion: "2.20240101.00.00" } },
+      }),
     });
+    if (!res.ok) return 0;
+    const json = (await res.json()) as { videoDetails?: { lengthSeconds?: string } };
+    return Number(json.videoDetails?.lengthSeconds ?? 0) / 60;
+  } catch {
+    return 0;
   }
+}
+
+export async function fetchChannelSnapshot(input: string): Promise<ChannelSnapshot> {
+  const channelId = await resolveChannelId(input);
+
+  const [about, feed] = await Promise.all([
+    getText(`https://www.youtube.com/channel/${channelId}/about`),
+    fetchFeed(channelId),
+  ]);
+
+  const title =
+    unescapeJson(/"channelMetadataRenderer":\{"title":"((?:[^"\\]|\\.)*)"/.exec(about)?.[1] ?? "") ||
+    feed[0]?.title ||
+    "Canal";
+  const handle = unescapeJson(/"canonicalChannelUrl":"[^"]*?\/(@[\w.\-]+)"/.exec(about)?.[1] ?? "");
+  const description = unescapeJson(
+    /"description":"((?:[^"\\]|\\.){0,1200})"/.exec(about)?.[1] ?? "",
+  );
+  const thumbnail =
+    /<meta property="og:image" content="([^"]+)"/.exec(about)?.[1] ??
+    /"avatar":\{"thumbnails":\[\{"url":"([^"]+)"/.exec(about)?.[1] ??
+    "";
+  const subscribers = parseCompact(/"subscriberCountText":"([^"]+)"/.exec(about)?.[1] ?? "0");
+  const views = parseCompact(/"viewCountText":"([^"]+)"/.exec(about)?.[1] ?? "0");
+  const videoCount = parseCompact(/"videoCountText":"([^"]+)"/.exec(about)?.[1] ?? "0");
+  const joined = /"joinedDateText":\{"content":"Joined ([^"]+)"/.exec(about)?.[1] ?? "";
+  const publishedAt = joined ? new Date(joined).toISOString() : "";
+
+  if (!feed.length) {
+    throw new Error(
+      "Não encontramos vídeos públicos recentes nesse canal. Verifique o @handle informado.",
+    );
+  }
+
+  const durations = await Promise.all(feed.map((v) => fetchDuration(v.id)));
+
+  let videos: VideoSnapshot[] = feed.map((v, i) => {
+    const durationMin = durations[i] || (v.isShort ? 0.8 : 0);
+    return {
+      id: v.id,
+      title: v.title,
+      publishedAt: v.publishedAt,
+      views: v.views,
+      likes: v.likes,
+      comments: 0,
+      durationMin,
+      isShort: v.isShort || (durationMin > 0 && durationMin <= 1.05),
+      thumbnail: v.thumbnail,
+      engagementRate: v.views ? (v.likes / v.views) * 100 : 0,
+      vsAverage: 0,
+    } satisfies VideoSnapshot;
+  });
 
   const avgViews = videos.length
     ? Math.round(videos.reduce((a, v) => a + v.views, 0) / videos.length)
@@ -132,9 +208,9 @@ export async function fetchChannelSnapshot(input: string, key: string): Promise<
 
   const sortedByViews = [...videos].sort((a, b) => b.views - a.views);
   const longs = videos.filter((v) => !v.isShort);
-  const durations = longs.map((v) => v.durationMin).sort((a, b) => a - b);
-  const medianDurationMin = durations.length
-    ? Math.round(durations[Math.floor(durations.length / 2)]! * 10) / 10
+  const longDurations = longs.map((v) => v.durationMin).filter(Boolean).sort((a, b) => a - b);
+  const medianDurationMin = longDurations.length
+    ? Math.round(longDurations[Math.floor(longDurations.length / 2)]! * 10) / 10
     : 0;
 
   const dates = videos.map((v) => new Date(v.publishedAt).getTime()).sort((a, b) => b - a);
@@ -169,7 +245,7 @@ export async function fetchChannelSnapshot(input: string, key: string): Promise<
     );
   }
   if (medianDurationMin) {
-    const above = longs.filter((v) => v.views > avgViews);
+    const above = longs.filter((v) => v.views > avgViews && v.durationMin);
     const avgAbove = above.length
       ? Math.round((above.reduce((a, v) => a + v.durationMin, 0) / above.length) * 10) / 10
       : medianDurationMin;
@@ -177,19 +253,21 @@ export async function fetchChannelSnapshot(input: string, key: string): Promise<
       `Duração mediana dos vídeos longos: ${medianDurationMin} min. Os que superaram a média de views têm ~${avgAbove} min — essa é a faixa a testar.`,
     );
   }
-  if (shortsShare > 0) {
-    const shorts = videos.filter((v) => v.isShort);
+  const shorts = videos.filter((v) => v.isShort);
+  if (shorts.length) {
     const shortsAvg = Math.round(shorts.reduce((a, v) => a + v.views, 0) / shorts.length);
     insights.push(
       `Shorts são ${shortsShare}% das publicações recentes e fazem em média ${shortsAvg.toLocaleString("pt-BR")} views vs ${avgViews.toLocaleString("pt-BR")} da média geral.`,
     );
   } else {
-    insights.push("Nenhum Short nas publicações recentes — há espaço para testar cortes como fonte extra de descoberta.");
+    insights.push(
+      "Nenhum Short nas publicações recentes — há espaço para testar cortes como fonte extra de descoberta.",
+    );
   }
   const bestEng = [...videos].sort((a, b) => b.engagementRate - a.engagementRate)[0];
   if (bestEng) {
     insights.push(
-      `Maior engajamento: “${bestEng.title}” com ${bestEng.engagementRate.toFixed(2)}% (likes+comentários / views) — sinal de tema com comunidade forte.`,
+      `Maior taxa de likes: “${bestEng.title}” com ${bestEng.engagementRate.toFixed(2)}% (likes / views) — sinal de tema com comunidade forte.`,
     );
   }
   insights.push(
@@ -198,14 +276,14 @@ export async function fetchChannelSnapshot(input: string, key: string): Promise<
 
   return {
     channelId,
-    title: ch.snippet.title,
-    handle: ch.snippet.customUrl ?? "",
-    description: ch.snippet.description ?? "",
-    thumbnail: ch.snippet.thumbnails?.medium?.url ?? "",
-    subscribers: Number(ch.statistics?.subscriberCount ?? 0),
-    views: Number(ch.statistics?.viewCount ?? 0),
-    videoCount: Number(ch.statistics?.videoCount ?? 0),
-    publishedAt: ch.snippet.publishedAt,
+    title,
+    handle,
+    description,
+    thumbnail,
+    subscribers,
+    views,
+    videoCount,
+    publishedAt,
     videos: videos.slice(0, 12),
     insights,
     contentProfile: {
