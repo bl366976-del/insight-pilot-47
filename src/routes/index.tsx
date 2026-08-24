@@ -29,7 +29,7 @@ import {
   trends as demoTrends,
 } from "@/lib/channel-data";
 import { useStrategy } from "@/lib/use-strategy";
-import type { ChannelSnapshot } from "@/lib/youtube.server";
+import { compact, realMetrics } from "@/lib/channel-metrics";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -79,53 +79,6 @@ function Metric({
       </p>
     </div>
   );
-}
-
-function compact(n: number) {
-  if (n >= 1e9) return `${(n / 1e9).toFixed(1)}B`;
-  if (n >= 1e6) return `${(n / 1e6).toFixed(1)}M`;
-  if (n >= 1e3) return `${(n / 1e3).toFixed(0)}k`;
-  return String(n);
-}
-
-/** Métricas reais derivadas dos últimos vídeos importados do canal. */
-function realMetrics(s: ChannelSnapshot) {
-  const videos = [...s.videos].sort(
-    (a, b) => new Date(a.publishedAt).getTime() - new Date(b.publishedAt).getTime(),
-  );
-  const half = Math.max(1, Math.floor(videos.length / 2));
-  const older = videos.slice(0, half);
-  const recent = videos.slice(half);
-  const avg = (arr: typeof videos, pick: (v: (typeof videos)[number]) => number) =>
-    arr.length ? arr.reduce((a, v) => a + pick(v), 0) / arr.length : 0;
-
-  const viewsDelta = older.length
-    ? Math.round((avg(recent, (v) => v.views) / Math.max(avg(older, (v) => v.views), 1) - 1) * 100)
-    : 0;
-  const engDelta =
-    Math.round(
-      (avg(recent, (v) => v.engagementRate) - avg(older, (v) => v.engagementRate)) * 100,
-    ) / 100;
-
-  const growth = videos.map((v) => ({
-    label: new Date(v.publishedAt).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }),
-    views: Math.round(v.views / 1000),
-  }));
-
-  const engAvg = avg(videos, (v) => v.engagementRate);
-  const consistency = Math.min(100, Math.round(s.contentProfile.postsPerWeek * 40));
-  const variety = Math.min(100, s.contentProfile.topTopics.length * 12);
-  const scores = [
-    { label: "Engajamento", value: Math.min(100, Math.round(engAvg * 20)) },
-    { label: "Consistência", value: consistency },
-    { label: "Variedade de temas", value: variety },
-    {
-      label: "Descoberta (Shorts)",
-      value: Math.min(100, Math.round(s.contentProfile.shortsShare)),
-    },
-  ];
-
-  return { viewsDelta, engDelta, growth, engAvg, scores };
 }
 
 function Dashboard() {
