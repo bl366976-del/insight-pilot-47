@@ -18,15 +18,18 @@ import {
 } from "recharts";
 import { AppShell } from "@/components/AppShell";
 import { WhyChip } from "@/components/WhyChip";
+import { StrategyBar } from "@/components/StrategyBar";
 import {
-  alerts,
+  alerts as demoAlerts,
   channel,
-  growth,
-  opportunities,
-  scores,
-  todayTasks,
-  trends,
+  growth as demoGrowth,
+  opportunities as demoOpportunities,
+  scores as demoScores,
+  todayTasks as demoTasks,
+  trends as demoTrends,
 } from "@/lib/channel-data";
+import { useStrategy } from "@/lib/use-strategy";
+import type { ChannelSnapshot } from "@/lib/youtube.server";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -53,11 +56,13 @@ function Metric({
   value,
   delta,
   suffix = "%",
+  period = "28 dias",
 }: {
   label: string;
   value: string;
   delta: number;
   suffix?: string;
+  period?: string;
 }) {
   const up = delta >= 0;
   return (
@@ -70,32 +75,93 @@ function Metric({
         {up ? <ArrowUpRight className="size-3" /> : <ArrowDownRight className="size-3" />}
         {up ? "+" : ""}
         {delta}
-        {suffix} · 28 dias
+        {suffix} · {period}
       </p>
     </div>
   );
 }
 
+function compact(n: number) {
+  if (n >= 1e9) return `${(n / 1e9).toFixed(1)}B`;
+  if (n >= 1e6) return `${(n / 1e6).toFixed(1)}M`;
+  if (n >= 1e3) return `${(n / 1e3).toFixed(0)}k`;
+  return String(n);
+}
+
+/** Métricas reais derivadas dos últimos vídeos importados do canal. */
+function realMetrics(s: ChannelSnapshot) {
+  const videos = [...s.videos].sort(
+    (a, b) => new Date(a.publishedAt).getTime() - new Date(b.publishedAt).getTime(),
+  );
+  const half = Math.max(1, Math.floor(videos.length / 2));
+  const older = videos.slice(0, half);
+  const recent = videos.slice(half);
+  const avg = (arr: typeof videos, pick: (v: (typeof videos)[number]) => number) =>
+    arr.length ? arr.reduce((a, v) => a + pick(v), 0) / arr.length : 0;
+
+  const viewsDelta = older.length
+    ? Math.round((avg(recent, (v) => v.views) / Math.max(avg(older, (v) => v.views), 1) - 1) * 100)
+    : 0;
+  const engDelta =
+    Math.round(
+      (avg(recent, (v) => v.engagementRate) - avg(older, (v) => v.engagementRate)) * 100,
+    ) / 100;
+
+  const growth = videos.map((v) => ({
+    label: new Date(v.publishedAt).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }),
+    views: Math.round(v.views / 1000),
+  }));
+
+  const engAvg = avg(videos, (v) => v.engagementRate);
+  const consistency = Math.min(100, Math.round(s.contentProfile.postsPerWeek * 40));
+  const variety = Math.min(100, s.contentProfile.topTopics.length * 12);
+  const scores = [
+    { label: "Engajamento", value: Math.min(100, Math.round(engAvg * 20)) },
+    { label: "Consistência", value: consistency },
+    { label: "Variedade de temas", value: variety },
+    {
+      label: "Descoberta (Shorts)",
+      value: Math.min(100, Math.round(s.contentProfile.shortsShare)),
+    },
+  ];
+
+  return { viewsDelta, engDelta, growth, engAvg, scores };
+}
+
 function Dashboard() {
+  const { plan, loading, error, createdAt, generate, snapshot } = useStrategy();
+  const m = snapshot ? realMetrics(snapshot) : null;
+
+  const growth = m?.growth.length ? m.growth : demoGrowth;
+  const scores = m?.scores ?? demoScores;
+  const tasks = plan?.tasks?.length ? plan.tasks : demoTasks;
+  const alerts = plan?.alerts?.length ? plan.alerts : demoAlerts;
+  const opportunities = plan?.opportunities?.length ? plan.opportunities : demoOpportunities;
+  const trends = plan?.trends?.length ? plan.trends : demoTrends;
+
   return (
     <AppShell>
       <section className="grid-noise panel p-6 sm:p-8">
         <p className="text-xs uppercase tracking-[0.2em] text-accent">Seu YouTube em 60 segundos</p>
         <h1 className="mt-3 max-w-2xl text-2xl font-bold sm:text-3xl">
-          O canal cresceu {channel.subsDelta}% esta semana e dois vídeos estão acima da média — mas o
-          CTR caiu 0,7 ponto.
+          {snapshot
+            ? `${snapshot.title}: ${compact(snapshot.subscribers)} inscritos e média de ${compact(
+                snapshot.contentProfile.avgViews,
+              )} views nos últimos vídeos.`
+            : "Conecte seu canal e transforme os seus números em decisões de conteúdo."}
         </h1>
         <p className="mt-3 max-w-2xl text-sm text-muted-foreground">
-          A audiência respondeu melhor a vídeos de comparação e uma tendência do seu nicho entrou em
-          estado <span className="text-accent">Explodindo</span>. Recomendação principal: produzir um
-          vídeo de 9–11 minutos comparando agentes de IA locais.
+          {plan?.summary ??
+            (snapshot
+              ? "Gerando a leitura estratégica do seu canal com base nos vídeos importados…"
+              : "O Órbita importa seus vídeos públicos, entende o tipo de conteúdo que você faz e recomenda a próxima ação — sem conselhos genéricos.")}
         </p>
         <div className="mt-5 flex flex-wrap items-center gap-3">
           <Link
             to="/conectar"
             className="inline-flex items-center gap-2 rounded-lg border border-border bg-surface-2 px-4 py-2.5 text-sm font-medium transition-colors hover:border-accent hover:text-accent"
           >
-            <Youtube className="size-4" /> Conectar meu canal
+            <Youtube className="size-4" /> {snapshot ? "Gerenciar canal" : "Conectar meu canal"}
           </Link>
           <Link
             to="/assistente"
@@ -109,28 +175,83 @@ function Dashboard() {
           >
             <Clapperboard className="size-4" /> Ver meu próximo vídeo
           </Link>
-          <WhyChip
-            confidence="alta"
-            data={[
-              "Comparações: 9,4 inscritos/1k views vs 4,1 da média do canal",
-              "Tendência “agentes de IA locais”: +42% em 60 dias",
-              "Melhor faixa de retenção do canal: 8–12 minutos",
-            ]}
-          />
+          {snapshot && (
+            <WhyChip
+              confidence="alta"
+              data={snapshot.insights.slice(0, 3)}
+            />
+          )}
         </div>
       </section>
 
+      <StrategyBar
+        connected={Boolean(snapshot)}
+        loading={loading}
+        error={error}
+        createdAt={plan ? createdAt : null}
+        onGenerate={generate}
+      />
+
       <section className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Metric label="Inscritos" value={channel.subscribers.toLocaleString("pt-BR")} delta={channel.subsDelta} />
-        <Metric label="Views (30d)" value={`${(channel.views30d / 1000).toFixed(0)}k`} delta={channel.viewsDelta} />
-        <Metric label="CTR" value={`${channel.ctr}%`} delta={channel.ctrDelta} suffix=" pt" />
-        <Metric label="Retenção" value={`${channel.retention}%`} delta={channel.retentionDelta} suffix=" pt" />
+        {snapshot && m ? (
+          <>
+            <Metric
+              label="Inscritos"
+              value={compact(snapshot.subscribers)}
+              delta={0}
+              suffix=""
+              period="total"
+            />
+            <Metric
+              label="Média de views"
+              value={compact(snapshot.contentProfile.avgViews)}
+              delta={m.viewsDelta}
+              period="vídeos recentes"
+            />
+            <Metric
+              label="Engajamento"
+              value={`${m.engAvg.toFixed(2)}%`}
+              delta={m.engDelta}
+              suffix=" pt"
+              period="vídeos recentes"
+            />
+            <Metric
+              label="Frequência"
+              value={`${snapshot.contentProfile.postsPerWeek}/sem`}
+              delta={0}
+              suffix=""
+              period="últimos vídeos"
+            />
+          </>
+        ) : (
+          <>
+            <Metric
+              label="Inscritos"
+              value={channel.subscribers.toLocaleString("pt-BR")}
+              delta={channel.subsDelta}
+            />
+            <Metric
+              label="Views (30d)"
+              value={`${(channel.views30d / 1000).toFixed(0)}k`}
+              delta={channel.viewsDelta}
+            />
+            <Metric label="CTR" value={`${channel.ctr}%`} delta={channel.ctrDelta} suffix=" pt" />
+            <Metric
+              label="Retenção"
+              value={`${channel.retention}%`}
+              delta={channel.retentionDelta}
+              suffix=" pt"
+            />
+          </>
+        )}
       </section>
 
       <section className="mt-6 grid gap-4 lg:grid-cols-3">
         <div className="panel p-5 lg:col-span-2">
-          <h2 className="text-base font-semibold">Crescimento das últimas 8 semanas</h2>
-          <p className="text-xs text-muted-foreground">Views (mil) por semana</p>
+          <h2 className="text-base font-semibold">
+            {snapshot ? "Views por vídeo publicado" : "Crescimento das últimas 8 semanas"}
+          </h2>
+          <p className="text-xs text-muted-foreground">Views (mil)</p>
           <div className="mt-4 h-56">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={growth} margin={{ left: 0, right: 8, top: 8 }}>
@@ -178,10 +299,7 @@ function Dashboard() {
                   <span className="num">{s.value}</span>
                 </div>
                 <div className="mt-1 h-1.5 rounded-full bg-muted">
-                  <div
-                    className="h-full rounded-full bg-accent"
-                    style={{ width: `${s.value}%` }}
-                  />
+                  <div className="h-full rounded-full bg-accent" style={{ width: `${s.value}%` }} />
                 </div>
               </li>
             ))}
@@ -196,7 +314,7 @@ function Dashboard() {
             <span className="text-[11px] text-muted-foreground">Impacto × Urgência × Esforço</span>
           </div>
           <ul className="mt-4 space-y-3">
-            {todayTasks.map((t) => (
+            {tasks.map((t) => (
               <li key={t.task} className="flex gap-3 rounded-lg bg-surface-2 p-3">
                 <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-accent" />
                 <div>
@@ -242,8 +360,8 @@ function Dashboard() {
             </Link>
           </div>
           <ul className="mt-4 space-y-3">
-            {opportunities.slice(0, 3).map((o) => (
-              <li key={o.id} className="rounded-lg bg-surface-2 p-3">
+            {opportunities.slice(0, 3).map((o, i) => (
+              <li key={`${o.title}-${i}`} className="rounded-lg bg-surface-2 p-3">
                 <p className="text-sm font-medium">{o.title}</p>
                 <p className="mt-1 text-xs text-muted-foreground">{o.why}</p>
                 <p className="num mt-2 text-xs text-accent">Impacto {o.impact}/100</p>
@@ -260,8 +378,11 @@ function Dashboard() {
             </Link>
           </div>
           <ul className="mt-4 space-y-3">
-            {trends.slice(0, 4).map((t) => (
-              <li key={t.topic} className="flex items-center justify-between gap-3 rounded-lg bg-surface-2 p-3">
+            {trends.slice(0, 4).map((t, i) => (
+              <li
+                key={`${t.topic}-${i}`}
+                className="flex items-center justify-between gap-3 rounded-lg bg-surface-2 p-3"
+              >
                 <div>
                   <p className="text-sm font-medium">{t.topic}</p>
                   <p className="text-xs text-muted-foreground">{t.status}</p>
@@ -274,8 +395,8 @@ function Dashboard() {
       </section>
 
       <p className="mt-8 text-center text-[11px] text-muted-foreground">
-        Projeções são estimativas com nível de confiança — nunca promessas de resultado. Dados de
-        demonstração até conectar seu canal do YouTube.
+        Projeções são estimativas com nível de confiança — nunca promessas de resultado.
+        {snapshot ? "" : " Dados de demonstração até conectar seu canal do YouTube."}
       </p>
     </AppShell>
   );
