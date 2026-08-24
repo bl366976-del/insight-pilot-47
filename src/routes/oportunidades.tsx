@@ -1,7 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { WhyChip } from "@/components/WhyChip";
-import { catalog, opportunities } from "@/lib/channel-data";
+import { StrategyBar } from "@/components/StrategyBar";
+import { catalog as demoCatalog, opportunities as demoOpportunities } from "@/lib/channel-data";
+import { useStrategy } from "@/lib/use-strategy";
 
 export const Route = createFileRoute("/oportunidades")({
   head: () => ({
@@ -23,6 +25,10 @@ export const Route = createFileRoute("/oportunidades")({
 });
 
 function Page() {
+  const { plan, loading, error, createdAt, generate, snapshot } = useStrategy();
+  const opportunities = plan?.opportunities?.length ? plan.opportunities : demoOpportunities;
+  const catalog = plan?.catalog?.length ? plan.catalog : demoCatalog;
+
   return (
     <AppShell>
       <header>
@@ -34,9 +40,17 @@ function Page() {
         </p>
       </header>
 
+      <StrategyBar
+        connected={Boolean(snapshot)}
+        loading={loading}
+        error={error}
+        createdAt={plan ? createdAt : null}
+        onGenerate={generate}
+      />
+
       <div className="mt-6 grid gap-4 lg:grid-cols-2">
-        {opportunities.map((o) => (
-          <article key={o.id} className="panel flex flex-col p-5">
+        {opportunities.map((o, i) => (
+          <article key={`${o.title}-${i}`} className="panel flex flex-col p-5">
             <div className="flex items-center justify-between">
               <span className="rounded-full bg-accent/15 px-2.5 py-1 text-[11px] font-medium text-accent">
                 {o.tag}
@@ -46,7 +60,7 @@ function Page() {
             <h2 className="mt-3 text-base font-semibold">{o.title}</h2>
             <p className="mt-2 text-sm text-muted-foreground">{o.why}</p>
             <ul className="mt-3 space-y-1.5 text-xs text-foreground/85">
-              {o.data.map((d) => (
+              {(o.data ?? []).map((d) => (
                 <li key={d} className="flex gap-2">
                   <span className="mt-1.5 size-1 shrink-0 rounded-full bg-primary" />
                   {d}
@@ -54,10 +68,12 @@ function Page() {
               ))}
             </ul>
             <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border pt-4 text-[11px] text-muted-foreground">
-              <span>Confiança: <span className="text-accent">{o.confidence}</span></span>
+              <span>
+                Confiança: <span className="text-accent">{o.confidence}</span>
+              </span>
               <span>· Esforço: {o.effort}</span>
               <span className="ml-auto">
-                <WhyChip data={o.data} confidence={o.confidence} />
+                <WhyChip data={o.data ?? []} confidence={o.confidence} />
               </span>
             </div>
           </article>
@@ -70,8 +86,8 @@ function Page() {
           Explorar · Repetir · Atualizar · Abandonar · Transformar
         </p>
         <div className="mt-4 divide-y divide-border">
-          {catalog.map((c) => (
-            <div key={c.title} className="flex flex-wrap items-center gap-3 py-3">
+          {catalog.map((c, i) => (
+            <div key={`${c.title}-${i}`} className="flex flex-wrap items-center gap-3 py-3">
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium">{c.title}</p>
                 <p className="text-xs text-muted-foreground">{c.note}</p>
