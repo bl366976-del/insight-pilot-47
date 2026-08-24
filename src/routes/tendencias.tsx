@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
-import { trends } from "@/lib/channel-data";
+import { StrategyBar } from "@/components/StrategyBar";
+import { trends as demoTrends } from "@/lib/channel-data";
+import { useStrategy } from "@/lib/use-strategy";
 
 export const Route = createFileRoute("/tendencias")({
   head: () => ({
@@ -14,7 +16,8 @@ export const Route = createFileRoute("/tendencias")({
       { property: "og:title", content: "Central de tendências | Órbita" },
       {
         property: "og:description",
-        content: "Explodindo, crescendo, saturado ou oportunidade escondida — com score de oportunidade.",
+        content:
+          "Explodindo, crescendo, saturado ou oportunidade escondida — com score de oportunidade.",
       },
     ],
   }),
@@ -48,6 +51,9 @@ function Bar({ label, value, tone = "accent" }: { label: string; value: number; 
 }
 
 function Page() {
+  const { plan, loading, error, createdAt, generate, snapshot } = useStrategy();
+  const trends = plan?.trends?.length ? plan.trends : demoTrends;
+
   return (
     <AppShell>
       <header>
@@ -59,18 +65,32 @@ function Page() {
         </p>
       </header>
 
+      <StrategyBar
+        connected={Boolean(snapshot)}
+        loading={loading}
+        error={error}
+        createdAt={plan ? createdAt : null}
+        onGenerate={generate}
+      />
+
       <div className="mt-6 grid gap-4 md:grid-cols-2">
-        {trends.map((t) => (
-          <article key={t.topic} className="panel p-5">
+        {trends.map((t, i) => (
+          <article key={`${t.topic}-${i}`} className="panel p-5">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h2 className="text-base font-semibold">{t.topic}</h2>
                 <p className="mt-1 text-[11px] text-muted-foreground">{t.source}</p>
               </div>
-              <span className={`shrink-0 rounded-full border px-2.5 py-1 text-[11px] ${statusColor[t.status]}`}>
+              <span
+                className={`shrink-0 rounded-full border px-2.5 py-1 text-[11px] ${statusColor[t.status] ?? statusColor["Estável"]}`}
+              >
                 {t.status}
               </span>
             </div>
+
+            {"why" in t && t.why ? (
+              <p className="mt-3 text-sm text-muted-foreground">{t.why}</p>
+            ) : null}
 
             <div className="mt-4 space-y-2.5">
               <Bar label="Interesse" value={t.interest} />
