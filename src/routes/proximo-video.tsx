@@ -1,7 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { WhyChip } from "@/components/WhyChip";
-import { nextVideo } from "@/lib/channel-data";
+import { StrategyBar } from "@/components/StrategyBar";
+import { nextVideo as demoNextVideo } from "@/lib/channel-data";
+import { useStrategy } from "@/lib/use-strategy";
 
 export const Route = createFileRoute("/proximo-video")({
   head: () => ({
@@ -32,6 +34,9 @@ function Field({ label, value }: { label: string; value: string }) {
 }
 
 function Page() {
+  const { plan, loading, error, createdAt, generate, snapshot } = useStrategy();
+  const nextVideo = plan?.nextVideo?.title ? plan.nextVideo : demoNextVideo;
+
   return (
     <AppShell>
       <header>
@@ -39,13 +44,21 @@ function Page() {
         <h1 className="mt-2 text-2xl font-bold sm:text-3xl">Qual vídeo eu deveria fazer agora?</h1>
       </header>
 
+      <StrategyBar
+        connected={Boolean(snapshot)}
+        loading={loading}
+        error={error}
+        createdAt={plan ? createdAt : null}
+        onGenerate={generate}
+      />
+
       <section className="grid-noise panel mt-6 p-6">
         <div className="flex flex-wrap items-center gap-3">
           <span className="rounded-full bg-primary/15 px-2.5 py-1 text-[11px] font-medium text-primary">
             Recomendação principal
           </span>
           <span className="num text-xs text-accent">Potencial {nextVideo.potential}/100</span>
-          <WhyChip data={nextVideo.reasons} confidence="alta" />
+          <WhyChip data={nextVideo.reasons ?? []} confidence="alta" />
         </div>
         <h2 className="mt-4 text-xl font-bold sm:text-2xl">{nextVideo.title}</h2>
 
@@ -61,7 +74,7 @@ function Page() {
         <div className="mt-5">
           <p className="text-[11px] uppercase tracking-widest text-muted-foreground">Estrutura</p>
           <ol className="mt-2 space-y-2">
-            {nextVideo.structure.map((s) => (
+            {(nextVideo.structure ?? []).map((s) => (
               <li key={s} className="flex gap-3 text-sm text-foreground/90">
                 <span className="mt-2 size-1 shrink-0 rounded-full bg-accent" />
                 {s}
@@ -77,9 +90,9 @@ function Page() {
       </section>
 
       <section className="mt-6">
-        <h2 className="text-base font-semibold">3 alternativas</h2>
+        <h2 className="text-base font-semibold">Alternativas</h2>
         <div className="mt-3 grid gap-3 md:grid-cols-3">
-          {nextVideo.alternatives.map((a) => (
+          {(nextVideo.alternatives ?? []).map((a) => (
             <article key={a.title} className="panel p-4">
               <p className="text-sm font-medium">{a.title}</p>
               <p className="mt-1 text-xs text-muted-foreground">{a.note}</p>

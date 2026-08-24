@@ -11,8 +11,10 @@ import {
   XAxis,
 } from "recharts";
 import { AppShell } from "@/components/AppShell";
-import { channel, growth, scores, catalog } from "@/lib/channel-data";
-import { useChannel } from "@/lib/use-channel";
+import { channel, growth as demoGrowth, scores as demoScores, catalog as demoCatalog } from "@/lib/channel-data";
+import { compact, realMetrics } from "@/lib/channel-metrics";
+import { StrategyBar } from "@/components/StrategyBar";
+import { useStrategy } from "@/lib/use-strategy";
 
 export const Route = createFileRoute("/analytics")({
   head: () => ({
@@ -41,7 +43,7 @@ const verdictColor: Record<string, string> = {
   Explorar: "text-opportunity",
 };
 
-function Metric({ label, value, delta, suffix = "%" }: { label: string; value: string; delta: number; suffix?: string }) {
+function Metric({ label, value, delta, suffix = "%", period = "28 dias" }: { label: string; value: string; delta: number; suffix?: string; period?: string }) {
   const up = delta >= 0;
   return (
     <div className="panel panel-hover p-4">
@@ -51,14 +53,18 @@ function Metric({ label, value, delta, suffix = "%" }: { label: string; value: s
         {up ? <ArrowUpRight className="size-3" /> : <ArrowDownRight className="size-3" />}
         {up ? "+" : ""}
         {delta}
-        {suffix} · 28 dias
+        {suffix} · {period}
       </p>
     </div>
   );
 }
 
 function Page() {
-  const { snapshot } = useChannel();
+  const { plan, loading, error, createdAt, generate, snapshot } = useStrategy();
+  const m = snapshot ? realMetrics(snapshot) : null;
+  const growth = m?.growth.length ? m.growth : demoGrowth;
+  const scores = m?.scores ?? demoScores;
+  const catalog = plan?.catalog?.length ? plan.catalog : (m?.catalog ?? demoCatalog);
 
   return (
     <AppShell>
@@ -79,17 +85,36 @@ function Page() {
         )}
       </header>
 
-      <section className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Metric label="Inscritos" value={(snapshot?.subscribers ?? channel.subscribers).toLocaleString("pt-BR")} delta={channel.subsDelta} />
-        <Metric label="Views (30d)" value={`${(channel.views30d / 1000).toFixed(0)}k`} delta={channel.viewsDelta} />
-        <Metric label="CTR" value={`${channel.ctr}%`} delta={channel.ctrDelta} suffix=" pt" />
-        <Metric label="Retenção" value={`${channel.retention}%`} delta={channel.retentionDelta} suffix=" pt" />
+      <StrategyBar
+        connected={Boolean(snapshot)}
+        loading={loading}
+        error={error}
+        createdAt={plan ? createdAt : null}
+        onGenerate={generate}
+      />
+
+      <section className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {snapshot && m ? (
+          <>
+            <Metric label="Inscritos" value={compact(snapshot.subscribers)} delta={0} suffix="" period="total" />
+            <Metric label="Views totais" value={compact(snapshot.views)} delta={0} suffix="" period="histórico" />
+            <Metric label="Média de views" value={compact(snapshot.contentProfile.avgViews)} delta={m.viewsDelta} period="vídeos recentes" />
+            <Metric label="Engajamento" value={`${m.engAvg.toFixed(2)}%`} delta={m.engDelta} suffix=" pt" period="vídeos recentes" />
+          </>
+        ) : (
+          <>
+            <Metric label="Inscritos" value={channel.subscribers.toLocaleString("pt-BR")} delta={channel.subsDelta} />
+            <Metric label="Views (30d)" value={`${(channel.views30d / 1000).toFixed(0)}k`} delta={channel.viewsDelta} />
+            <Metric label="CTR" value={`${channel.ctr}%`} delta={channel.ctrDelta} suffix=" pt" />
+            <Metric label="Retenção" value={`${channel.retention}%`} delta={channel.retentionDelta} suffix=" pt" />
+          </>
+        )}
       </section>
 
       <section className="mt-4 grid gap-4 lg:grid-cols-3">
         <div className="panel p-5 lg:col-span-2">
-          <h2 className="text-base font-semibold">Views por semana</h2>
-          <p className="text-xs text-muted-foreground">Últimas 8 semanas (mil views)</p>
+          <h2 className="text-base font-semibold">{snapshot ? "Views por vídeo publicado" : "Views por semana"}</h2>
+          <p className="text-xs text-muted-foreground">mil views</p>
           <div className="mt-4 h-56">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={growth} margin={{ left: 0, right: 8, top: 8 }}>
@@ -150,8 +175,8 @@ function Page() {
           O que fazer com cada vídeo antigo — repetir, atualizar, transformar, explorar ou abandonar.
         </p>
         <div className="mt-3 divide-y divide-border">
-          {catalog.map((c) => (
-            <div key={c.title} className="flex flex-wrap items-center gap-3 py-3">
+          {catalog.map((c, i) => (
+            <div key={`${c.title}-${i}`} className="flex flex-wrap items-center gap-3 py-3">
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm">{c.title}</p>
                 <p className="text-xs text-muted-foreground">{c.note}</p>
