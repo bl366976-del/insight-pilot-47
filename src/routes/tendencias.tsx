@@ -88,8 +88,8 @@ function Page() {
               </span>
             </div>
 
-            {"why" in t && t.why ? (
-              <p className="mt-3 text-sm text-muted-foreground">{t.why}</p>
+            {(t as { why?: string }).why ? (
+              <p className="mt-3 text-sm text-muted-foreground">{(t as { why?: string }).why}</p>
             ) : null}
 
             <div className="mt-4 space-y-2.5">
